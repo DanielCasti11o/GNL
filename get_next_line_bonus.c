@@ -1,16 +1,16 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   get_next_line.c                                    :+:      :+:    :+:   */
+/*   get_next_line_bonus.c                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: dacastil <dacastil@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/10/15 17:35:06 by dacastil          #+#    #+#             */
-/*   Updated: 2024/11/12 15:55:36 by dacastil         ###   ########.fr       */
+/*   Created: 2024/11/05 18:31:02 by dacastil          #+#    #+#             */
+/*   Updated: 2024/11/12 17:49:08 by dacastil         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "get_next_line.h"
+#include "get_next_line_bonus.h"
 
 char	*free_join(char *buffer, char *buff)
 {
@@ -52,7 +52,7 @@ char	*ft_next(char *buffer)
 	return (next);
 }
 
-char	*first_line(char *buffer)
+char	*obt_line(char *buffer)
 {
 	size_t	i;
 	char	*line;
@@ -79,7 +79,7 @@ char	*first_line(char *buffer)
 	return (line);
 }
 
-char	*readfile_forline(int fd, char *buffer)
+char	*read_line(int fd, char *buffer)
 {
 	int		bytes_read;
 	char	*buff_temp;
@@ -99,7 +99,7 @@ char	*readfile_forline(int fd, char *buffer)
 			free (buffer);
 			return (NULL);
 		}
-		buff_temp[bytes_read] = '\0';
+		buff_temp[bytes_read] = 0;
 		buffer = free_join(buffer, buff_temp);
 		if (ft_strchr(buff_temp, '\n'))
 			break ;
@@ -110,39 +110,56 @@ char	*readfile_forline(int fd, char *buffer)
 
 char	*get_next_line(int fd)
 {
-	static char	*buffer;
+	static char	*buffer[1024];
 	char		*line;
 
 	if (fd < 0 || BUFFER_SIZE <= 0)
 		return (NULL);
-	buffer = readfile_forline(fd, buffer);
-	if (!buffer)
+	buffer[fd] = read_line(fd, buffer[fd]);
+	if (!buffer[fd])
 		return (NULL);
-	if (ft_strlen(buffer) == 0)
+	if (ft_strlen(buffer[fd]) == 0)
 	{
-		free(buffer);
-		buffer = NULL;
+		free(buffer[fd]);
+		buffer[fd] = NULL;
 		return (NULL);
 	}
-	line = first_line(buffer);
-	buffer = ft_next(buffer);
+	line = obt_line(buffer[fd]);
+	buffer[fd] = ft_next(buffer[fd]);
 	return (line);
 }
 
-int	main()
-{
-	char	*str;
-	int		fd;
+#include <stdio.h>
 
-	fd = open("text.txt", O_RDONLY);
-	while ((str = get_next_line(fd)) != NULL)
-	{
-		printf("%s", str);
-		free (str);
-	}
-	// str = get_next_line(fd);
-	// printf ("%s", str);
-	free (str);
-	close(fd);
-	return 0;
+int main(void)
+{
+    int fd1, fd2;
+    char *line;
+
+    // Abre varios archivos en modo lectura
+    fd1 = open("text.txt", O_RDONLY);
+    fd2 = open("rfx.txt", O_RDONLY);
+
+    // Lee las líneas del primer archivo
+    printf("Leyendo archivo1.txt:\n");
+    while ((line = get_next_line(fd1)) != NULL)
+    {
+        printf("%s", line);
+        free(line);
+    }
+
+    // Lee las líneas del segundo archivo
+    printf("\nLeyendo archivo2.txt:\n");
+    while ((line = get_next_line(fd2)) != NULL)
+    {
+        printf("%s", line);
+        free(line);
+    }
+
+    // Cierra los archivos
+    close(fd1);
+    close(fd2);
+
+    return (0);
 }
+
